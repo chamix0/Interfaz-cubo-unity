@@ -40,6 +40,7 @@ namespace BluetoothCubo
                 namedPipeClient.Close();
             }
             // await BluetoothConection();
+            //comentario de prueba
         }
 
         private static async Task BluetoothConection()
