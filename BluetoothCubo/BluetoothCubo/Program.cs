@@ -41,6 +41,7 @@ namespace BluetoothCubo
             }
             // await BluetoothConection();
             //comentario de prueba
+            //fasdf
         }
 
         private static async Task BluetoothConection()
