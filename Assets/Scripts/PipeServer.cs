@@ -3,64 +3,70 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.IO.Pipes;
 using System.Text;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 
 public class PipeServer : MonoBehaviour
 {
-    private NamedPipeServerStream namedPipeServer;
+    private const int BUFFER_SIZE = 256;
+    private List<string> devices;
+    public TMP_Dropdown Dropdown;
+
+    private void Awake()
+    {
+        devices = new List<string>();
+    }
 
     // Start is called before the first frame update
     void Start()
     {
-        //start the process that manages bluetooth conection
-        
-        // ProcessStartInfo psi = new ProcessStartInfo(Application.dataPath + "/Executables/v2/BluetoothCubo.exe");
-        // psi.UseShellExecute = true;
-        // psi.WindowStyle = ProcessWindowStyle.Hidden;
-        // psi.WindowStyle = ProcessWindowStyle.Minimized;
-        // Process process = Process.Start(psi);
+        Thread serverReadThread = new Thread(ServerThreadRead);
+        serverReadThread.Start();
+    }
 
 
-        using (namedPipeServer)
+    private void ServerThreadRead()
+    {
+        NamedPipeServerStream namedPipeServerStream =
+            new NamedPipeServerStream("pipe");
+
+        namedPipeServerStream.WaitForConnection();
+        Debug.Log("Client has conected");
+
+        string buffer = "";
+        while (buffer != "-1")
         {
-          //conect Server to 
-            
-            
-            
-            namedPipeServer = new NamedPipeServerStream("test-pipe");
-            namedPipeServer.WaitForConnection();
-            // namedPipeServer.WriteByte(1);
-            // int byteFromClient = namedPipeServer.ReadByte();
-            // Debug.Log(byteFromClient);
+            buffer = ReciveDataFromClient(namedPipeServerStream);
+            SendDataToClient(namedPipeServerStream, 1);
+            devices.Add(buffer);
+            print(buffer);
+        }
+
+
+        while (true)
+        {
+            ReciveDataFromClient(namedPipeServerStream);
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void SendDataToClient(NamedPipeServerStream namedPipeServer, Byte value)
     {
+        namedPipeServer.WaitForPipeDrain();
+        namedPipeServer.WriteByte(value);
     }
 
-    private void OnApplicationQuit()
-    {
-        print("cerrando el pipe");
-        namedPipeServer.Flush();
-        namedPipeServer.Disconnect();
-        namedPipeServer.Dispose();
-    }
 
-    public void clicked()
+    private string ReciveDataFromClient(NamedPipeServerStream namedPipeServer)
     {
-        using (namedPipeServer)
-        {
-            namedPipeServer.WriteByte(1);
-
-            byte[] buffer = new byte[256];
-            int byteFromClient = namedPipeServer.Read(buffer, 0, buffer.Length);
-            string someString = Encoding.ASCII.GetString(buffer);
-            Debug.Log(someString);
-        }
+        namedPipeServer.WaitForPipeDrain();
+        Byte[] buffer = new byte[BUFFER_SIZE];
+        namedPipeServer.Read(buffer);
+        string someString = Encoding.ASCII.GetString(buffer);
+        return someString;
     }
 }

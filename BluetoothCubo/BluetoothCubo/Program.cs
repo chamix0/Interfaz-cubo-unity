@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
@@ -10,6 +11,7 @@ using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
+using Buffer = Windows.Storage.Streams.Buffer;
 
 namespace BluetoothCubo
 {
@@ -17,34 +19,49 @@ namespace BluetoothCubo
     {
         #region Data
 
+        private const int BUFFER_SIZE = 256;
         private static DeviceInformation device = null;
         public static string CUBE_TRACK_ID = "aadb";
+        public static String selectedDevice = "";
+        public static List<String> deviceList;
+        
+        public static String lastMove;
+        public static int lastDirection;
+        public static float time;
 
         #endregion
 
         public static async Task Main(string[] args)
         {
-            using (NamedPipeClientStream namedPipeClient = new NamedPipeClientStream("test-pipe"))
+            using (NamedPipeClientStream namedPipeClient = new NamedPipeClientStream("pipe"))
             {
-                //conect the client to the server (unity)
+                deviceList = new List<string>();
+                //connect the client to the server (unity)
                 namedPipeClient.Connect();
+                Console.WriteLine("connection successful");
 
-                //esperar a recibir respuesta
-                Console.WriteLine(namedPipeClient.ReadByte());
-
-                String cad = "Has pulsado el boton";
-                byte[] bytes = Encoding.ASCII.GetBytes(cad);
-                namedPipeClient.Write(bytes, 0, bytes.Length);
-
-                namedPipeClient.Flush();
-                namedPipeClient.Close();
+                //start Bluetooth 
+                await BluetoothConection(namedPipeClient);
             }
             // await BluetoothConection();
             //comentario de prueba
-            //fasdf
         }
 
-        private static async Task BluetoothConection()
+        public static void SendDataToServer(NamedPipeClientStream namedPipeClient, String data)
+        {
+            namedPipeClient.WaitForPipeDrain();
+            byte[] bytes = Encoding.ASCII.GetBytes(data);
+            namedPipeClient.Write(bytes, 0, bytes.Length);
+        }
+
+        public static int ReciveDataFromServer(NamedPipeClientStream namedPipeClient)
+        {
+            namedPipeClient.WaitForPipeDrain();
+            int buffer = namedPipeClient.ReadByte();
+            return buffer;
+        }
+
+        private static async Task BluetoothConection(NamedPipeClientStream namedPipeClientStream)
         {
             // Query for extra properties you want returned
             string[] requestedProperties = { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected" };
@@ -68,6 +85,20 @@ namespace BluetoothCubo
             // Start the watcher.
             deviceWatcher.Start();
 
+            Thread.Sleep(200);
+            Console.WriteLine("sending device list to the server");
+            foreach (var name in deviceList)
+            {
+                Console.WriteLine("sending - " + name);
+                SendDataToServer(namedPipeClientStream, name);
+                //recive ACK
+                ReciveDataFromServer(namedPipeClientStream);
+                Console.WriteLine("recived by the server");
+            }
+
+            Console.WriteLine("finished sending devices");
+            SendDataToServer(namedPipeClientStream, "-1");
+            ReciveDataFromServer(namedPipeClientStream);
             while (true)
             {
                 if (device == null)
@@ -112,7 +143,8 @@ namespace BluetoothCubo
                                             GattCommunicationStatus status =
                                                 await characteristic
                                                     .WriteClientCharacteristicConfigurationDescriptorAsync(
-                                                        GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                                                        GattClientCharacteristicConfigurationDescriptorValue
+                                                            .Notify);
                                             if (status == GattCommunicationStatus.Success)
                                             {
                                                 characteristic.ValueChanged += Characteristic_ValueChanged;
@@ -124,6 +156,16 @@ namespace BluetoothCubo
                         }
                     }
 
+                    float prevTime = time;
+                    //mandar estado del cubo
+                    while (true)
+                    {
+                        if (prevTime!=time)
+                        {
+                            SendDataToServer(namedPipeClientStream,lastMove);
+                            prevTime = time;
+                        }  
+                    }
                     Console.WriteLine("press any key to exit");
                     Console.ReadLine();
                     break;
@@ -241,7 +283,10 @@ namespace BluetoothCubo
 
         private static void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation args)
         {
-            if (args.Name == "GiC69331")
+            if (!deviceList.Contains(args.Name))
+                deviceList.Add(args.Name);
+
+            if (args.Name == selectedDevice)
                 device = args;
 
             // throw new NotImplementedException();
