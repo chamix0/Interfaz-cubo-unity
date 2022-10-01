@@ -16,6 +16,7 @@ public class PipeServer : MonoBehaviour
     private const int BUFFER_SIZE = 256;
     private List<string> devices;
     public TMP_Dropdown Dropdown;
+    private bool valueSelected = false;
 
     private void Awake()
     {
@@ -39,19 +40,28 @@ public class PipeServer : MonoBehaviour
         Debug.Log("Client has conected");
 
         string buffer = "";
-        while (buffer != "-1")
+        while (!String.Equals(buffer,"null"))
         {
             buffer = ReciveDataFromClient(namedPipeServerStream);
-            SendDataToClient(namedPipeServerStream, 1);
-            devices.Add(buffer);
             print(buffer);
+            print(!String.Equals(buffer,"null"));
+            if (!String.Equals(buffer,"null"))
+            {
+                SendDataToClient(namedPipeServerStream, 1);
+                devices.Add(buffer);
+                Dropdown.options.Add(new TMP_Dropdown.OptionData(buffer));
+                print(buffer);
+            }
         }
 
 
-        while (true)
-        {
-            ReciveDataFromClient(namedPipeServerStream);
-        }
+        while (!valueSelected) ;
+        SendDataToClient(namedPipeServerStream, Convert.ToByte(Dropdown.value));
+    }
+
+    public void ValueChanged()
+    {
+        valueSelected = true;
     }
 
     private void SendDataToClient(NamedPipeServerStream namedPipeServer, Byte value)

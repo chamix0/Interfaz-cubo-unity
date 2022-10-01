@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
+using Windows.Security.Authentication.OnlineId;
 using Windows.Storage.Streams;
 using Buffer = Windows.Storage.Streams.Buffer;
 
@@ -22,29 +23,30 @@ namespace BluetoothCubo
         private const int BUFFER_SIZE = 256;
         private static DeviceInformation device = null;
         public static string CUBE_TRACK_ID = "aadb";
-        public static String selectedDevice = "";
-        public static List<String> deviceList;
-        
-        public static String lastMove;
-        public static int lastDirection;
+        public static String selectedDevice = null; //"GiC69331";
+
+        //Variables
+        private static DevicesList _devicesList;
+        private static CubeTracker _cubeTracker;
+
         public static float time;
 
         #endregion
 
         public static async Task Main(string[] args)
         {
-            using (NamedPipeClientStream namedPipeClient = new NamedPipeClientStream("pipe"))
-            {
-                deviceList = new List<string>();
-                //connect the client to the server (unity)
-                namedPipeClient.Connect();
-                Console.WriteLine("connection successful");
+            //init variables
+            _devicesList = new DevicesList();
+            _cubeTracker = new CubeTracker();
 
-                //start Bluetooth 
-                await BluetoothConection(namedPipeClient);
-            }
-            // await BluetoothConection();
-            //comentario de prueba
+            //start Bluetooth 
+            await BluetoothConection();
+        }
+
+        private void ClientThread()
+        {
+            NamedPipeClientStream namedPipeClient = new NamedPipeClientStream("pipe");
+            namedPipeClient.Connect();
         }
 
         public static void SendDataToServer(NamedPipeClientStream namedPipeClient, String data)
@@ -61,7 +63,7 @@ namespace BluetoothCubo
             return buffer;
         }
 
-        private static async Task BluetoothConection(NamedPipeClientStream namedPipeClientStream)
+        private static async Task BluetoothConection()
         {
             // Query for extra properties you want returned
             string[] requestedProperties = { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected" };
@@ -84,31 +86,17 @@ namespace BluetoothCubo
 
             // Start the watcher.
             deviceWatcher.Start();
-
-            Thread.Sleep(200);
-            Console.WriteLine("sending device list to the server");
-            foreach (var name in deviceList)
-            {
-                Console.WriteLine("sending - " + name);
-                SendDataToServer(namedPipeClientStream, name);
-                //recive ACK
-                ReciveDataFromServer(namedPipeClientStream);
-                Console.WriteLine("recived by the server");
-            }
-
-            Console.WriteLine("finished sending devices");
-            SendDataToServer(namedPipeClientStream, "-1");
-            ReciveDataFromServer(namedPipeClientStream);
             while (true)
             {
                 if (device == null)
                 {
                     Thread.Sleep(200);
+                    ChooseDevice();
                 }
                 else
                 {
-                    Console.WriteLine("press any key to pair with the cube\n");
-                    Console.ReadLine();
+                    // Console.WriteLine("press any key to pair with the cube\n");
+                    // Console.ReadLine();
                     BluetoothLEDevice bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(device.Id);
                     Console.WriteLine("Attempting to pair with the cube");
                     GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync();
@@ -156,16 +144,6 @@ namespace BluetoothCubo
                         }
                     }
 
-                    float prevTime = time;
-                    //mandar estado del cubo
-                    while (true)
-                    {
-                        if (prevTime!=time)
-                        {
-                            SendDataToServer(namedPipeClientStream,lastMove);
-                            prevTime = time;
-                        }  
-                    }
                     Console.WriteLine("press any key to exit");
                     Console.ReadLine();
                     break;
@@ -200,7 +178,7 @@ namespace BluetoothCubo
 
             aux += bin;
             bin = aux;
-            Console.Out.WriteLine(ReadFaces(bin));
+            Console.Out.WriteLine(_cubeTracker.ReadFaces(bin));
 
             //     Console.Out.Write(hex+"  ");
             // }
@@ -221,44 +199,15 @@ namespace BluetoothCubo
             // Console.WriteLine("");
         }
 
-        static public string ReadFaces(string move)
+        private static void ChooseDevice()
         {
-            string face = "";
-            int direction = 1;
-            string directionSimbol = "";
-            string firstHalf = move.Substring(0, 4);
-            string secondHalf = move.Substring(4, 4);
-
-            switch (firstHalf)
-            {
-                case "0101":
-                    face = "R";
-                    break;
-                case "0011":
-                    face = "L";
-                    break;
-                case "0001":
-                    face = "F";
-                    break;
-                case "0110":
-                    face = "B";
-                    break;
-                case "0010":
-                    face = "U";
-                    break;
-                case "0100":
-                    face = "D";
-                    break;
-            }
-
-            if (secondHalf == "0011")
-            {
-                direction = -1;
-                directionSimbol = "\u0027";
-            }
+            string[] devices = _devicesList.GetDevices();
+            for (int i = 0; i < devices.Length; i++)
+                Console.WriteLine(i + " - " + devices[i]);
 
 
-            return "" + face + directionSimbol;
+            Console.WriteLine(" write the index of the device you want to connect to:");
+            device = _devicesList.GetDevice(Int32.Parse(Console.ReadLine()));
         }
 
         private static void DeviceWatcher_Stopped(DeviceWatcher sender, object args)
@@ -271,25 +220,15 @@ namespace BluetoothCubo
             // throw new NotImplementedException();
         }
 
-        private static void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate args)
-        {
-            // throw new NotImplementedException();
-        }
+        private static void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate args) =>
+            _devicesList.RemoveDevice(args.Id);
 
         private static void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate args)
         {
             // throw new NotImplementedException();
         }
 
-        private static void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation args)
-        {
-            if (!deviceList.Contains(args.Name))
-                deviceList.Add(args.Name);
-
-            if (args.Name == selectedDevice)
-                device = args;
-
-            // throw new NotImplementedException();
-        }
+        private static void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation args) =>
+            _devicesList.AddDevice(args);
     }
 }
