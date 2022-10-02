@@ -124,7 +124,6 @@ namespace BluetoothCubo
                                         GattCharacteristicProperties properties =
                                             characteristic.CharacteristicProperties;
 
-
                                         if (properties.HasFlag(GattCharacteristicProperties.Notify))
                                         {
                                             Console.WriteLine("notify property found");
@@ -163,40 +162,19 @@ namespace BluetoothCubo
             //     string hex = Convert.ToString(pack, 2);
             //     Console.Out.Write(hex + "-");
             // }
+            // Console.Out.WriteLine();
             string bin = Convert.ToString(values[16], 2);
-            // Console.Out.WriteLine(bin);
 
-            // for (int i = 0; i < 20; i++)
-            // {
-            //     string hex = Convert.ToString(values[i], 2);
-            //     Console.Out.Write(i+" ");
             string aux = "";
             for (int j = 0; j < 8 - bin.Length; j++)
-            {
                 aux += "0";
-            }
+            
 
             aux += bin;
             bin = aux;
+            
             Console.Out.WriteLine(_cubeTracker.ReadFaces(bin));
-
-            //     Console.Out.Write(hex+"  ");
-            // }
-
-            // Console.Out.Write("\n");
-            // Console.WriteLine(values);
-            // int count = 0;
-            // for (int i = binary.Length - 1; i > 0; i--)
-            // {
-            //     Console.Write(binary.ToCharArray()[i]);
-            //     if (count % 4 == 0)
-            //     {
-            //         Console.Write("-");
-            //     }
-            //     count++;
-            // }
-
-            // Console.WriteLine("");
+            // Console.Out.WriteLine(bin);
         }
 
         private static void ChooseDevice()
