@@ -1,20 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 public class ShowCenterReference : MonoBehaviour
 {
-    [SerializeField] private Image _imageTop;
-    [SerializeField] private Image _imageFront;
+    public Image _imageTop, _imageFront;
     [SerializeField] private CubeInputs _cubeInputs;
-
 
 
     // Update is called once per frame
     void Update()
     {
-        _imageTop.tintColor = _cubeInputs.topColor;
-        _imageFront.tintColor = _cubeInputs.FrontColor;
+        _imageTop.color = _cubeInputs.topColor;
+        _imageFront.color = _cubeInputs.FrontColor;
     }
 }

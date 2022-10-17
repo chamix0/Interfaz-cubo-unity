@@ -1,11 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class Move
 {
     public string msg;
-    public float time;
+    public TimeSpan time;
     public int direction;
     public FACES face;
 
@@ -14,6 +14,6 @@ public class Move
         msg = value;
         face = FACES.NULL;
         direction = 0;
-        time = Time.unscaledTime;
+        time = DateTime.Now.TimeOfDay;
     }
 }

@@ -5,11 +5,12 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[DefaultExecutionOrder(2)]
 public class CubeConectionManager : MonoBehaviour
 {
     private ProcessMessages _processMessages;
     private RunProcess _process;
-
+    private CubeInputs _cubeInputs;
     [SerializeField] private TMP_Dropdown _dropdown;
     [SerializeField] private Button _button;
 
@@ -18,6 +19,7 @@ public class CubeConectionManager : MonoBehaviour
     {
         _process = GetComponent<RunProcess>();
         _processMessages = GetComponent<ProcessMessages>();
+        _cubeInputs = GetComponent<CubeInputs>();
         StartCoroutine(StablishCommunication());
         _button.interactable = false;
     }
@@ -25,7 +27,7 @@ public class CubeConectionManager : MonoBehaviour
 
     public void ConnectButton()
     {
-        _process.SendMessage("" + _dropdown.value);
+        _process.SendMessageProcess("" + _dropdown.value);
         _button.interactable = false;
     }
 
@@ -37,6 +39,9 @@ public class CubeConectionManager : MonoBehaviour
         {
             _dropdown.options.Add(new TMP_Dropdown.OptionData(_processMessages.Dequeue().msg));
         }
+
         _button.interactable = true;
+        _cubeInputs.gameObject.SetActive(true);
+        _cubeInputs.isActive = true;
     }
 }

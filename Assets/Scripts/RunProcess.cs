@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using UnityEngine;
 
+[DefaultExecutionOrder(1)]
 public class RunProcess : MonoBehaviour
 {
     private Process process = null;
@@ -14,8 +15,8 @@ public class RunProcess : MonoBehaviour
 
     private void Start()
     {
-        _messages = GetComponent<ProcessMessages>();
         StartProcess();
+        _messages = GetComponent<ProcessMessages>();
     }
 
     void StartProcess()
@@ -24,7 +25,7 @@ public class RunProcess : MonoBehaviour
         {
             process = new Process();
             process.EnableRaisingEvents = false;
-            process.StartInfo.FileName = Application.dataPath + "./Executable/BluetoothCubo.exe";
+            process.StartInfo.FileName = Application.dataPath + "/Executable/BluetoothCubo.exe";
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardInput = true;
@@ -46,8 +47,9 @@ public class RunProcess : MonoBehaviour
 
     void DataReceived(object sender, DataReceivedEventArgs eventArgs)
     {
-        _messages.Enqueue(eventArgs.Data);
-        print(eventArgs.Data);
+        string data = eventArgs.Data;
+        print(data);
+        _messages.EnqueueMsg(data);
     }
 
 
@@ -56,7 +58,7 @@ public class RunProcess : MonoBehaviour
         UnityEngine.Debug.LogError(eventArgs.Data);
     }
 
-    public void SendMessage(string msg)
+    public void SendMessageProcess(string msg)
     {
         messageStream.WriteLine(msg);
     }
@@ -66,11 +68,7 @@ public class RunProcess : MonoBehaviour
         if (process != null && !process.HasExited)
         {
             process.Kill();
+            print("process dead");
         }
-    }
-
-    public Process GetProcess()
-    {
-        return process;
     }
 }

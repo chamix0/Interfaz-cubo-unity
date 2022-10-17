@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Configuration;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -19,12 +20,14 @@ public enum FACES
     NULL
 }
 
+[DefaultExecutionOrder(3)]
 public class CubeInputs : MonoBehaviour
 
 {
     private ProcessMessages _messages;
     private Queue<Move> _moves;
     private List<char> _validationFaces;
+    public bool isActive = false;
     public Color topColor = Color.clear, FrontColor = Color.clear;
 
     Color[,] centers = new Color[3, 4]
@@ -46,15 +49,18 @@ public class CubeInputs : MonoBehaviour
 
     void Start()
     {
+        topColor = centers[0, 0];
+        FrontColor = centers[1, 0];
         _messages = GetComponent<ProcessMessages>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (_messages.HasMessages())
+        if (isActive && _messages.HasMessages())
         {
             Move move = _messages.Dequeue();
+            print(ValidateMoves(move.msg));
             if (ValidateMoves(move.msg))
             {
                 //double moves
@@ -62,20 +68,22 @@ public class CubeInputs : MonoBehaviour
                 move = DoubleMove(move);
 
                 _moves.Enqueue(move);
+                print(move.face + " " + move.direction);
             }
         }
     }
 
     private Move DoubleMove(Move move)
     {
-        Move move1 = move;
+        Move move1 = GetFace(move);
         Move move2 = null;
         if (_messages.HasMessages())
         {
             move2 = _messages.Peek();
             if (ValidateMoves(move2.msg))
                 move2 = GetFace(move2);
-            if (move2.time - move1.time < 0.01f)
+            print("turn difference " + (move2.time.TotalMilliseconds - move1.time.TotalMilliseconds));
+            if (move2.time.TotalMilliseconds - move1.time.TotalMilliseconds < 1000)
             {
                 //could be a double move
                 if (move1.face == FACES.L && move2.face == FACES.R ||
@@ -88,8 +96,8 @@ public class CubeInputs : MonoBehaviour
                     offsetCentersX(move1.direction);
                 }
 
-                if (move1.face == FACES.U && move2.face == FACES.D ||
-                    move2.face == FACES.D && move1.face == FACES.U && move1.direction != move2.direction)
+                else if (move1.face == FACES.U && move2.face == FACES.D ||
+                         move2.face == FACES.D && move1.face == FACES.U && move1.direction != move2.direction)
                 {
                     //take out the other face move
                     _messages.Dequeue();
@@ -98,8 +106,8 @@ public class CubeInputs : MonoBehaviour
                     offsetCentersY(move1.direction);
                 }
 
-                if (move1.face == FACES.F && move2.face == FACES.B ||
-                    move2.face == FACES.B && move1.face == FACES.F && move1.direction != move2.direction)
+                else if (move1.face == FACES.F && move2.face == FACES.B ||
+                         move2.face == FACES.B && move1.face == FACES.F && move1.direction != move2.direction)
                 {
                     //take out the other face move
                     _messages.Dequeue();
@@ -115,18 +123,21 @@ public class CubeInputs : MonoBehaviour
 
     public void offsetCentersY(int direction)
     {
-        Color[] aux = new Color [4] { centers[1, 0], centers[1, 1], centers[1, 2], centers[1, 3] };
-
+        Color[] aux = new Color[4]
+            { centers[1, 0], centers[1, 1], centers[1, 2], centers[1, 3] };
         if (direction > 0)
         {
-            centers[1, 0] = aux[4];
-            for (int i = 1; i < 4; i++)
-                centers[1, i] = aux[i - 1];
+            centers[1, 0] = aux[3];
+            centers[1, 1] = aux[0];
+            centers[1, 2] = aux[1];
+            centers[1, 3] = aux[2];
         }
         else
         {
-            for (int i = 0; i < 4; i++)
-                centers[1, i] = aux[(i + 1) % 4];
+            centers[1, 0] = aux[1];
+            centers[1, 1] = aux[2];
+            centers[1, 2] = aux[3];
+            centers[1, 3] = aux[0];
         }
 
         UpdateColors();
@@ -134,18 +145,22 @@ public class CubeInputs : MonoBehaviour
 
     public void offsetCentersX(int direction)
     {
-        Color[] aux = new Color [3] { centers[0, 0], centers[1, 0], centers[2, 0] };
+        Color[] aux = new Color[4]
+            { centers[0, 0], centers[1, 0], centers[2, 0], centers[1, 2] };
 
         if (direction > 0)
         {
             centers[0, 0] = aux[3];
-            for (int i = 1; i < 3; i++)
-                centers[i, 0] = aux[i - 1];
+            centers[1, 0] = aux[0];
+            centers[2, 0] = aux[1];
+            centers[1, 2] = aux[2];
         }
         else
         {
-            for (int i = 0; i < 3; i++)
-                centers[i, 0] = aux[(i + 1) % 3];
+            centers[0, 0] = aux[1];
+            centers[1, 0] = aux[2];
+            centers[2, 0] = aux[3];
+            centers[1, 2] = aux[0];
         }
 
         UpdateColors();
@@ -153,21 +168,21 @@ public class CubeInputs : MonoBehaviour
 
     public void offsetCentersZ(int direction)
     {
-        Color[,] aux = centers;
-
+        Color[] aux = new Color[4]
+            { centers[0, 0], centers[0, 2], centers[1, 1], centers[1, 3] };
         if (direction > 0)
         {
-            centers[0, 0] = aux[1, 3];
-            centers[1, 1] = aux[0, 0];
-            centers[0, 2] = aux[1, 1];
-            centers[1, 3] = aux[0, 2];
+            centers[0, 0] = aux[3];
+            centers[1, 1] = aux[0];
+            centers[1, 2] = aux[2];
+            centers[1, 3] = aux[1];
         }
         else
         {
-            centers[0, 0] = aux[1, 1];
-            centers[1, 1] = aux[0, 2];
-            centers[0, 2] = aux[1, 3];
-            centers[1, 3] = aux[0, 0];
+            centers[0, 0] = aux[2];
+            centers[1, 1] = aux[1];
+            centers[1, 2] = aux[3];
+            centers[1, 3] = aux[0];
         }
 
         UpdateColors();
@@ -176,7 +191,7 @@ public class CubeInputs : MonoBehaviour
     private void UpdateColors()
     {
         topColor = centers[0, 0];
-        FrontColor = centers[0, 1];
+        FrontColor = centers[1, 0];
     }
 
     private Move GetFace(Move move)
@@ -185,24 +200,24 @@ public class CubeInputs : MonoBehaviour
 
         move.direction = chars.Length > 1 ? -1 : 1;
 
-        switch (move.msg)
+        switch (chars[0])
         {
-            case "R":
+            case 'R':
                 move.face = FACES.R;
                 break;
-            case "L":
+            case 'L':
                 move.face = FACES.L;
                 break;
-            case "F":
+            case 'F':
                 move.face = FACES.F;
                 break;
-            case "B":
+            case 'B':
                 move.face = FACES.B;
                 break;
-            case "U":
+            case 'U':
                 move.face = FACES.U;
                 break;
-            case "D":
+            case 'D':
                 move.face = FACES.D;
                 break;
         }
@@ -213,6 +228,7 @@ public class CubeInputs : MonoBehaviour
     private bool ValidateMoves(string move)
     {
         char[] chars = move.ToCharArray();
+        print(chars[0]);
         return _validationFaces.Contains(chars[0]);
     }
 }

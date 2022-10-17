@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 
-
+[DefaultExecutionOrder(0)]
 public class ProcessMessages : MonoBehaviour
 {
     private Queue<Move> messages;
@@ -20,10 +20,9 @@ public class ProcessMessages : MonoBehaviour
         return messages.Count > 0;
     }
 
-    public void Enqueue(string msg)
+    public void EnqueueMsg(string msg)
     {
-        Move aux = new Move(msg);
-        messages.Enqueue(aux);
+        messages.Enqueue(new Move(msg));
     }
 
     public Move Dequeue()
