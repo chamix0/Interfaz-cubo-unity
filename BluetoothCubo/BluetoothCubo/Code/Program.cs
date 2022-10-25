@@ -19,7 +19,7 @@ namespace BluetoothCubo
         private static DeviceInformation device = null;
         public static string CUBE_TRACK_ID = "aadb";
         public static String selectedDevice = null; //"GiC69331";
-
+        bool connectionSuccess = false;
 
 
         //Variables
@@ -38,9 +38,11 @@ namespace BluetoothCubo
             await BluetoothConection();
         }
 
-        
+
         private static async Task BluetoothConection()
         {
+            bool connectionSuccess = false;
+
             // Query for extra properties you want returned
             string[] requestedProperties = { "System.Devices.Aep.DeviceAddress", "System.Devices.Aep.IsConnected" };
 
@@ -79,6 +81,7 @@ namespace BluetoothCubo
 
                     if (result.Status == GattCommunicationStatus.Success)
                     {
+                        connectionSuccess = true;
                         Console.WriteLine("pairing succeded");
                         var services = result.Services;
                         foreach (var service in services)
@@ -119,7 +122,11 @@ namespace BluetoothCubo
                         }
                     }
 
-                    Console.WriteLine("press any key to exit");
+                    if (connectionSuccess)
+                        Console.WriteLine("connection successful");
+                    else
+                        Console.WriteLine("connection failed");
+
                     Console.ReadLine();
                     break;
                 }

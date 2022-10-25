@@ -11,6 +11,7 @@ public class CubeConectionManager : MonoBehaviour
     private ProcessMessages _processMessages;
     private RunProcess _process;
     private CubeInputs _cubeInputs;
+    private string currentDevice = "";
     [SerializeField] private TMP_Dropdown _dropdown;
     [SerializeField] private Button _button;
 
@@ -27,7 +28,8 @@ public class CubeConectionManager : MonoBehaviour
 
     public void ConnectButton()
     {
-        _process.SendMessageProcess("" + _dropdown.options[_dropdown.value].text);
+        currentDevice = _dropdown.options[_dropdown.value].text;
+        _process.SendMessageProcess(currentDevice);
         _button.interactable = false;
     }
 
@@ -43,5 +45,12 @@ public class CubeConectionManager : MonoBehaviour
         _button.interactable = true;
         _cubeInputs.gameObject.SetActive(true);
         _cubeInputs.isActive = true;
+    }
+
+    public IEnumerator RestablishComunication()
+    {
+        _process.StartProcess();
+        yield return new WaitForSeconds(1);
+        _process.SendMessageProcess(currentDevice);
     }
 }

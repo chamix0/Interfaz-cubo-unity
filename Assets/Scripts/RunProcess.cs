@@ -19,14 +19,18 @@ public class RunProcess : MonoBehaviour
         _messages = GetComponent<ProcessMessages>();
     }
 
-    void StartProcess()
+    public void StartProcess()
     {
+        if (process != null && !process.HasExited)
+            process.Kill();
+
         try
         {
             process = new Process();
             process.EnableRaisingEvents = false;
             process.StartInfo.FileName = Application.dataPath + "/Executable/BluetoothCubo.exe";
             process.StartInfo.UseShellExecute = false;
+            process.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardInput = true;
             process.StartInfo.RedirectStandardError = true;

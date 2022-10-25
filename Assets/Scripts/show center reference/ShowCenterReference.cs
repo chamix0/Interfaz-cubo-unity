@@ -5,14 +5,18 @@ using UnityEngine.UI;
 
 public class ShowCenterReference : MonoBehaviour
 {
-    public Image _imageTop, _imageFront;
+    public Image _imageTop, _imageFront, _imageBottom, _imageRight, _imageBack, _imageLeft;
     [SerializeField] private CubeInputs _cubeInputs;
 
 
     // Update is called once per frame
     void Update()
     {
-        _imageTop.color = _cubeInputs.topColor;
-        _imageFront.color = _cubeInputs.FrontColor;
+        _imageTop.color = _cubeInputs.centers[0, 0];
+        _imageFront.color = _cubeInputs.centers[1, 0];
+        _imageBottom.color = _cubeInputs.centers[2, 0];
+        _imageRight.color = _cubeInputs.centers[1, 1];
+        _imageBack.color = _cubeInputs.centers[1, 2];
+        _imageLeft.color = _cubeInputs.centers[1, 3];
     }
 }

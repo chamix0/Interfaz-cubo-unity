@@ -25,13 +25,14 @@ public class CubeInputs : MonoBehaviour
 
 {
     private ProcessMessages _messages;
+    private CubeConectionManager _conection;
     private Queue<Move> _moves;
     private List<char> _validationFaces;
     public bool isActive = false;
     public Color topColor = Color.clear, FrontColor = Color.clear;
     private Move lastMove;
 
-    Color[,] centers = new Color[3, 4]
+    public Color[,] centers = new Color[3, 4]
     {
         { Color.white, Color.clear, Color.clear, Color.clear },
         {
@@ -50,6 +51,7 @@ public class CubeInputs : MonoBehaviour
 
     void Start()
     {
+        _conection = GetComponent<CubeConectionManager>();
         topColor = centers[0, 0];
         FrontColor = centers[1, 0];
         _messages = GetComponent<ProcessMessages>();
@@ -61,8 +63,12 @@ public class CubeInputs : MonoBehaviour
         if (isActive && _messages.HasMessages())
         {
             Move move = _messages.Dequeue();
-            print(ValidateMoves(move.msg));
-            if (ValidateMoves(move.msg))
+            //check if connection lost
+            if (move.msg == "connection failed")
+                StartCoroutine(_conection.RestablishComunication());
+
+            //check movements
+            else if (move.msg != "" && ValidateMoves(move.msg))
             {
                 //double moves
                 move = DoubleMove(move);
@@ -129,14 +135,18 @@ public class CubeInputs : MonoBehaviour
 
         print("turn  " + (move1.time));
         print("turn difference " + Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds));
-        if (Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds) < 500)
+        if (Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds) < 1000)
         {
             //could be a double move
             if ((move1.face == FACES.L && move2.face == FACES.R ||
                  move2.face == FACES.L && move1.face == FACES.R) && move1.direction != move2.direction)
             {
                 //take out the other face move
-                move1.direction *= -1;
+                if (move1.face == FACES.L)
+                    move1.direction *= -1;
+
+
+                // move1.direction *= -1;
                 move1.face = FACES.M;
                 offsetCentersX(move1.direction);
             }
@@ -145,7 +155,8 @@ public class CubeInputs : MonoBehaviour
                       move2.face == FACES.D && move1.face == FACES.U) && move1.direction != move2.direction)
             {
                 //take out the other face move
-                move1.direction *= -1;
+                if (move1.face == FACES.U)
+                    move1.direction *= -1;
                 move1.face = FACES.E;
                 offsetCentersY(move1.direction);
             }
@@ -153,7 +164,9 @@ public class CubeInputs : MonoBehaviour
             else if ((move1.face == FACES.F && move2.face == FACES.B ||
                       move2.face == FACES.B && move1.face == FACES.F) && move1.direction != move2.direction)
             {
-                move1.direction *= -1;
+                if (move1.face == FACES.F)
+                    move1.direction *= -1;
+
                 move1.face = FACES.S;
                 offsetCentersZ(move1.direction);
             }
@@ -210,19 +223,19 @@ public class CubeInputs : MonoBehaviour
     public void offsetCentersZ(int direction)
     {
         Color[] aux = new Color[4]
-            { centers[0, 0], centers[0, 2], centers[1, 1], centers[1, 3] };
-        if (direction > 0)
+            { centers[0, 0], centers[1, 1], centers[2, 0], centers[1, 3] };
+        if (direction < 0)
         {
             centers[0, 0] = aux[3];
             centers[1, 1] = aux[0];
-            centers[1, 2] = aux[2];
-            centers[1, 3] = aux[1];
+            centers[2, 0] = aux[1];
+            centers[1, 3] = aux[2];
         }
         else
         {
-            centers[0, 0] = aux[2];
-            centers[1, 1] = aux[1];
-            centers[1, 2] = aux[3];
+            centers[0, 0] = aux[1];
+            centers[1, 1] = aux[2];
+            centers[2, 0] = aux[3];
             centers[1, 3] = aux[0];
         }
 
