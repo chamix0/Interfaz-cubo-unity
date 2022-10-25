@@ -48,7 +48,7 @@ public class RunProcess : MonoBehaviour
     void DataReceived(object sender, DataReceivedEventArgs eventArgs)
     {
         string data = eventArgs.Data;
-        print(data);
+        print($"<color=#00FF00> Process : " + data + "</color>");
         _messages.EnqueueMsg(data);
     }
 

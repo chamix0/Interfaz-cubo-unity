@@ -27,7 +27,7 @@ public class CubeConectionManager : MonoBehaviour
 
     public void ConnectButton()
     {
-        _process.SendMessageProcess("" + _dropdown.value);
+        _process.SendMessageProcess("" + _dropdown.options[_dropdown.value].text);
         _button.interactable = false;
     }
 

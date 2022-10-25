@@ -157,7 +157,7 @@ namespace BluetoothCubo
             }
 
             // Console.WriteLine(" write the index of the device you want to connect to:");
-            device = _devicesList.GetDevice(Int32.Parse(Console.ReadLine()));
+            device = _devicesList.GetDevice(Console.ReadLine());
         }
 
         private static void DeviceWatcher_Stopped(DeviceWatcher sender, object args)
