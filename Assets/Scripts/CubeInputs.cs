@@ -96,19 +96,123 @@ public class CubeInputs : MonoBehaviour
                 move.face = FaceSwap(face, FACES.B, FACES.F, FACES.L, FACES.R, FACES.U, FACES.D);
                 print("blue");
             }
-
             else
             {
                 move.face = FaceSwap(face, FACES.R, FACES.L, FACES.B, FACES.F, FACES.U, FACES.D);
                 print("orange");
             }
-
-            print("AAAAAAAAAAA" + move.face);
         }
         else if (topColor == Color.yellow)
         {
+            if (FrontColor == Color.green)
+            {
+                move.face = FaceSwap(face, FACES.F, FACES.B, FACES.L, FACES.R, FACES.D, FACES.U);
+                print("red");
+            }
+            else if (FrontColor == Color.red)
+            {
+                move.face = FaceSwap(face, FACES.R, FACES.L, FACES.F, FACES.B, FACES.D, FACES.U);
+                print("red");
+            }
+            else if (FrontColor == Color.blue)
+            {
+                move.face = FaceSwap(face, FACES.B, FACES.F, FACES.R, FACES.L, FACES.D, FACES.U);
+                print("blue");
+            }
+            else
+            {
+                move.face = FaceSwap(face, FACES.L, FACES.R, FACES.B, FACES.F, FACES.D, FACES.U);
+                print("orange");
+            }
         }
-
+        else if (topColor == Color.green)
+        {
+            if (FrontColor == Color.white)
+            {
+                move.face = FaceSwap(face, FACES.L, FACES.R, FACES.F, FACES.B, FACES.U, FACES.D);
+            }
+            else if (FrontColor == Color.red)
+            {
+                move.face = FaceSwap(face, FACES.U, FACES.D, FACES.F, FACES.B, FACES.R, FACES.L);
+                print("red");
+            }
+            else if (FrontColor == Color.yellow)
+            {
+                move.face = FaceSwap(face, FACES.U, FACES.D, FACES.R, FACES.L, FACES.B, FACES.F);
+                print("blue");
+            }
+            else
+            {
+                move.face = FaceSwap(face, FACES.U, FACES.D, FACES.B, FACES.F, FACES.L, FACES.R);
+                print("orange");
+            }
+        }
+        else if (topColor == Color.blue)
+        {
+            if (FrontColor == Color.white)
+            {
+                move.face = FaceSwap(face, FACES.D, FACES.U, FACES.R, FACES.L, FACES.F, FACES.B);
+            }
+            else if (FrontColor == Color.red)
+            {
+                move.face = FaceSwap(face, FACES.D, FACES.U, FACES.F, FACES.B, FACES.L, FACES.R);
+                print("red");
+            }
+            else if (FrontColor == Color.yellow)
+            {
+                move.face = FaceSwap(face, FACES.D, FACES.U, FACES.L, FACES.R, FACES.B, FACES.F);
+                print("blue");
+            }
+            else
+            {
+                move.face = FaceSwap(face, FACES.D, FACES.U, FACES.B, FACES.F, FACES.R, FACES.L);
+                print("orange");
+            }
+        }
+        else if (topColor == Color.red)
+        {
+            if (FrontColor == Color.white)
+            {
+                move.face = FaceSwap(face, FACES.R, FACES.L, FACES.U, FACES.D, FACES.F, FACES.B);
+            }
+            else if (FrontColor == Color.green)
+            {
+                move.face = FaceSwap(face, FACES.F, FACES.B, FACES.U, FACES.D, FACES.L, FACES.R);
+                print("red");
+            }
+            else if (FrontColor == Color.yellow)
+            {
+                move.face = FaceSwap(face, FACES.L, FACES.R, FACES.U, FACES.D, FACES.B, FACES.F);
+                print("blue");
+            }
+            else
+            {
+                move.face = FaceSwap(face, FACES.B, FACES.F, FACES.D, FACES.U, FACES.R, FACES.L);
+                print("orange");
+            }
+        }
+        else
+        {
+            if (FrontColor == Color.white)
+            {
+                move.face = FaceSwap(face, FACES.L, FACES.R, FACES.D, FACES.U, FACES.F, FACES.B);
+            }
+            else if (FrontColor == Color.green)
+            {
+                move.face = FaceSwap(face, FACES.F, FACES.B, FACES.D, FACES.U, FACES.R, FACES.L);
+                print("red");
+            }
+            else if (FrontColor == Color.yellow)
+            {
+                move.face = FaceSwap(face, FACES.R, FACES.L, FACES.D, FACES.U, FACES.B, FACES.F);
+                print("blue");
+            }
+            else
+            {
+                move.face = FaceSwap(face, FACES.B, FACES.F, FACES.D, FACES.U, FACES.L, FACES.R);
+                print("orange");
+            }
+        }
 
         return move;
     }
@@ -135,7 +239,7 @@ public class CubeInputs : MonoBehaviour
 
         print("turn  " + (move1.time));
         print("turn difference " + Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds));
-        if (Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds) < 1000)
+        if (Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds) < 750)
         {
             //could be a double move
             if ((move1.face == FACES.L && move2.face == FACES.R ||
@@ -224,7 +328,7 @@ public class CubeInputs : MonoBehaviour
     {
         Color[] aux = new Color[4]
             { centers[0, 0], centers[1, 1], centers[2, 0], centers[1, 3] };
-        if (direction < 0)
+        if (direction > 0)
         {
             centers[0, 0] = aux[3];
             centers[1, 1] = aux[0];
