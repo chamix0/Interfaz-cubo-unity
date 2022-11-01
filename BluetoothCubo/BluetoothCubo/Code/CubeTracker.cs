@@ -2,12 +2,6 @@
 {
     public class CubeTracker
     {
-        private string lastMove;
-
-        public CubeTracker()
-        {
-            lastMove = null;
-        }
 
         public string ReadFaces(string move)
         {
@@ -43,8 +37,6 @@
                 directionSimbol = "\u0027";
                 face += "0";
             }
-
-            lastMove = face;
             return "" + face + directionSimbol;
         }
     }

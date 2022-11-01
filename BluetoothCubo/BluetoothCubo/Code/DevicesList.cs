@@ -21,7 +21,6 @@ namespace BluetoothCubo
                 if (devices[i].Name == name || devices[i].Id == name)
                     return i;
             }
-
             return -1;
         }
 
@@ -58,8 +57,6 @@ namespace BluetoothCubo
             List<string> names = new List<string>();
             foreach (var device in devices)
                 names.Add(device.Name);
-
-
             return names.ToArray();
         }
     }
