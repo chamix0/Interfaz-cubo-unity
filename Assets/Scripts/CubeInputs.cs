@@ -1,11 +1,11 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Configuration;
 using UnityEngine;
-using UnityEngine.UIElements;
 
+/// <summary>
+/// Important class, it is in charge of interpreting the messages coming from the process. Also of maintaining a reference state of the cube(centers)
+/// and creating a queue of the moves read by the cube
+/// </summary>
 public enum FACES
 {
     R,
@@ -24,13 +24,12 @@ public enum FACES
 public class CubeInputs : MonoBehaviour
 
 {
-    private ProcessMessages _messages;
+    private MovesQueue _messages;
     private CubeConectionManager _conection;
-    private Queue<Move> _moves;
-    private List<char> _validationFaces;
+    [SerializeField] private MovesQueue _moves; //must be  in a different object
+    private List<char> _validationFaces; //list with the possible incomes that are meant to be moves
     public bool isActive = false;
     public Color topColor = Color.clear, FrontColor = Color.clear;
-    private Move lastMove;
 
     public Color[,] centers = new Color[3, 4]
     {
@@ -45,7 +44,6 @@ public class CubeInputs : MonoBehaviour
     // Start is called before the first frame update
     private void Awake()
     {
-        _moves = new Queue<Move>();
         _validationFaces = new List<char>(new[] { 'R', 'L', 'U', 'D', 'F', 'B' });
     }
 
@@ -54,7 +52,7 @@ public class CubeInputs : MonoBehaviour
         _conection = GetComponent<CubeConectionManager>();
         topColor = centers[0, 0];
         FrontColor = centers[1, 0];
-        _messages = GetComponent<ProcessMessages>();
+        _messages = GetComponent<MovesQueue>();
     }
 
     // Update is called once per frame
@@ -73,7 +71,7 @@ public class CubeInputs : MonoBehaviour
                 //double moves
                 move = DoubleMove(move);
                 _moves.Enqueue(move);
-                lastMove = move;
+                _moves.lastMove = move;
                 print(move.face + " " + move.direction);
             }
         }
@@ -231,10 +229,10 @@ public class CubeInputs : MonoBehaviour
     private Move DoubleMove(Move move)
     {
         Move move1 = GetFace(move);
-        if (lastMove == null) lastMove = move;
-        Move move2 = lastMove;
-        if (_messages.HasMessages())
-            move2 = GetFace(_messages.Dequeue());
+        if (_moves.lastMove == null) _moves.lastMove = move;
+        Move move2 = _moves.lastMove;
+        // if (_messages.HasMessages())
+        //     move2 = GetFace(_messages.Dequeue());
 
 
         print("turn  " + (move1.time));
@@ -248,9 +246,7 @@ public class CubeInputs : MonoBehaviour
                 //take out the other face move
                 if (move1.face == FACES.L)
                     move1.direction *= -1;
-
-
-                // move1.direction *= -1;
+                
                 move1.face = FACES.M;
                 offsetCentersX(move1.direction);
             }
@@ -387,5 +383,10 @@ public class CubeInputs : MonoBehaviour
     {
         char[] chars = move.ToCharArray();
         return _validationFaces.Contains(chars[0]);
+    }
+
+    public Move GetLastMove()
+    {
+        return _moves.lastMove;
     }
 }

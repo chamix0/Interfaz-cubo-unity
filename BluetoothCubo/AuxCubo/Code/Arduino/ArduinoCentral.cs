@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO.Pipes;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth;
@@ -11,16 +8,18 @@ using Windows.Storage.Streams;
 
 namespace BluetoothCubo
 {
-    internal class Program
+    public class ArduinoCentral
     {
         #region Data
 
         private const int BUFFER_SIZE = 256;
         private static DeviceInformation device = null;
-        public static string CUBE_TRACK_ID = "aadb";
+        public static string CUBE_TRACK_ID = "19b1";
         public static String selectedDevice = null; //"GiC69331";
         bool connectionSuccess = false;
-
+        private static GattCharacteristic ledCharacteristicRead;
+        private static GattCharacteristic ledCharacteristicWrite;
+        private static bool valueLed = false;
 
         //Variables
         private static DevicesList _devicesList;
@@ -28,15 +27,15 @@ namespace BluetoothCubo
 
         #endregion
 
-        public static async Task Main(string[] args)
-        {
-            //init variables
-            _devicesList = new DevicesList();
-            _cubeTracker = new CubeTracker();
-
-//start Bluetooth 
-            await BluetoothConection();
-        }
+        // public static async Task Main(string[] args)
+        // {
+        //     //init variables
+        //     _devicesList = new DevicesList();
+        //     _cubeTracker = new CubeTracker();
+        //
+        //     //start Bluetooth 
+        //     await BluetoothConection();
+        // }
 
 
         private static async Task BluetoothConection()
@@ -87,7 +86,8 @@ namespace BluetoothCubo
                         foreach (var service in services)
                         {
                             Console.WriteLine(service.Uuid);
-                            if (service.Uuid.ToString("N").Substring(4, 4) == CUBE_TRACK_ID)
+                            Console.WriteLine(service.Uuid.ToString("N").Substring(0, 4));
+                            if (service.Uuid.ToString("N").Substring(0, 4) == CUBE_TRACK_ID)
                             {
                                 Console.WriteLine("found face track service");
                                 GattCharacteristicsResult characteristicsResult =
@@ -103,18 +103,14 @@ namespace BluetoothCubo
                                         GattCharacteristicProperties properties =
                                             characteristic.CharacteristicProperties;
 
-                                        if (properties.HasFlag(GattCharacteristicProperties.Notify))
+                                        if (properties.HasFlag(GattCharacteristicProperties.Read))
                                         {
-                                            Console.WriteLine("notify property found");
-                                            GattCommunicationStatus status =
-                                                await characteristic
-                                                    .WriteClientCharacteristicConfigurationDescriptorAsync(
-                                                        GattClientCharacteristicConfigurationDescriptorValue
-                                                            .Notify);
-                                            if (status == GattCommunicationStatus.Success)
-                                            {
-                                                characteristic.ValueChanged += Characteristic_ValueChanged;
-                                            }
+                                            ledCharacteristicRead = characteristic;
+                                        }
+
+                                        if (properties.HasFlag(GattCharacteristicProperties.Write))
+                                        {
+                                            ledCharacteristicWrite = characteristic;
                                         }
                                     }
                                 }
@@ -122,12 +118,29 @@ namespace BluetoothCubo
                         }
                     }
 
+
                     if (connectionSuccess)
                         Console.WriteLine("connection successful");
                     else
                         Console.WriteLine("connection failed");
 
-                    Console.ReadLine();
+
+                    string inputMsg = Console.ReadLine();
+                    while (inputMsg != "f")
+                    {
+                        inputMsg = Console.ReadLine();
+                        if (inputMsg == "1")
+                        {
+                            Console.WriteLine("Reading value in characteristic " + ledCharacteristicRead.Uuid);
+                            readDevice(ledCharacteristicRead);
+                        }
+                        else if (inputMsg == "2")
+                        {
+                            Console.WriteLine("Writting value in characteristic " + ledCharacteristicWrite.Uuid);
+                            writeDevice(ledCharacteristicWrite);
+                        }
+                    }
+
                     break;
                 }
             }
@@ -150,7 +163,7 @@ namespace BluetoothCubo
             aux += bin;
             bin = aux;
 
-            Console.Out.WriteLine(_cubeTracker.ReadFaces(bin));
+            Console.Out.WriteLine(bin);
         }
 
         private static void ChooseDevice()
@@ -165,6 +178,42 @@ namespace BluetoothCubo
 
             // Console.WriteLine(" write the index of the device you want to connect to:");
             device = _devicesList.GetDevice(Console.ReadLine());
+        }
+
+
+        public static async Task readDevice(GattCharacteristic characteristic)
+        {
+            GattReadResult result = await characteristic.ReadValueAsync();
+            if (result.Status == GattCommunicationStatus.Success)
+            {
+                var reader = DataReader.FromBuffer(result.Value);
+                byte[] input = new byte[reader.UnconsumedBufferLength];
+                reader.ReadBytes(input);
+                Console.WriteLine(input);
+                // Utilize the data as needed
+            }
+        }
+
+        public static async Task writeDevice(GattCharacteristic characteristic)
+        {
+            var writer = new DataWriter();
+            if (valueLed)
+            {
+                valueLed = false;
+                writer.WriteByte(0x00);
+            }
+            else
+            {
+                valueLed = true;
+                writer.WriteByte(0x01);
+            }
+
+            GattCommunicationStatus result =
+                await characteristic.WriteValueAsync(writer.DetachBuffer());
+            if (result == GattCommunicationStatus.Success)
+            {
+                // Successfully wrote to device
+            }
         }
 
         private static void DeviceWatcher_Stopped(DeviceWatcher sender, object args)

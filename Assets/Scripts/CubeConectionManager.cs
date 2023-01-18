@@ -1,14 +1,14 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
+/// <summary>
+/// Main script, it is in charge of establishing and maintaining the communication between the cube and the application. 
+/// </summary>
 [DefaultExecutionOrder(2)]
 public class CubeConectionManager : MonoBehaviour
 {
-    private ProcessMessages _processMessages;
+    private MovesQueue _movesQueue;
     private RunProcess _process;
     private CubeInputs _cubeInputs;
     private string currentDevice = "";
@@ -19,9 +19,10 @@ public class CubeConectionManager : MonoBehaviour
     void Start()
     {
         _process = GetComponent<RunProcess>();
-        _processMessages = GetComponent<ProcessMessages>();
+        _movesQueue = GetComponent<MovesQueue>();
         _cubeInputs = GetComponent<CubeInputs>();
-        StartCoroutine(StablishCommunication());
+        _button.onClick.AddListener(ConnectButton);
+        StartCoroutine(GetDevices());
         _button.interactable = false;
     }
 
@@ -33,13 +34,17 @@ public class CubeConectionManager : MonoBehaviour
         _button.interactable = false;
     }
 
-    IEnumerator StablishCommunication()
+    /// <summary>
+    /// reads from the messages queue the number of available devices and the devices
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator GetDevices()
     {
         yield return new WaitForSeconds(1);
-        int count = int.Parse(_processMessages.Dequeue().msg);
+        int count = int.Parse(_movesQueue.Dequeue().msg); //the first message will always be the number of available devices to connect  
         for (int i = 0; i < count; i++)
         {
-            _dropdown.options.Add(new TMP_Dropdown.OptionData(_processMessages.Dequeue().msg));
+            _dropdown.options.Add(new TMP_Dropdown.OptionData(_movesQueue.Dequeue().msg));
         }
 
         _button.interactable = true;
@@ -47,6 +52,10 @@ public class CubeConectionManager : MonoBehaviour
         _cubeInputs.isActive = true;
     }
 
+    /// <summary>
+    /// if communication fails it will retry establishing communication to the previously selected device.
+    /// </summary>
+    /// <returns></returns>
     public IEnumerator RestablishComunication()
     {
         _process.StartProcess();

@@ -19,16 +19,16 @@
                     face = "L";
                     break;
                 case "0001":
-                    face = "F";
-                    break;
-                case "0110":
                     face = "B";
                     break;
+                case "0110":
+                    face = "F";
+                    break;
                 case "0010":
-                    face = "U";
+                    face = "D";
                     break;
                 case "0100":
-                    face = "D";
+                    face = "U";
                     break;
             }
 
