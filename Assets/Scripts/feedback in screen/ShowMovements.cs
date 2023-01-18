@@ -10,6 +10,8 @@ public class ShowMovements : MonoBehaviour
     public TMP_Text text;
     [SerializeField] CubeInputs _cubeInputs;
     [SerializeField] private MovesQueue _movesQueue;
+    private int sameMoveCounter = 1;
+    private Move lastMove = null;
 
     // Update is called once per frame
     void Update()
@@ -17,7 +19,11 @@ public class ShowMovements : MonoBehaviour
         if (_movesQueue.HasMessages())
         {
             Move move = _movesQueue.Dequeue();
-            text.text = "" + move.face + move.direction;
+            sameMoveCounter = lastMove != null && move.Equals(lastMove)
+                ? sameMoveCounter + 1
+                : 1;
+            text.text = "" + move.face + move.direction * sameMoveCounter;
+            lastMove = move;
         }
     }
 }
