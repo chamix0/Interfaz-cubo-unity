@@ -159,6 +159,7 @@ namespace BluetoothCubo
                 Console.WriteLine(devices[i]);
 
             device = _devicesList.GetDevice(Console.ReadLine());
+            if (device==null)Console.WriteLine("Device not found");
         }
 
         private static void DeviceWatcher_Stopped(DeviceWatcher sender, object args)

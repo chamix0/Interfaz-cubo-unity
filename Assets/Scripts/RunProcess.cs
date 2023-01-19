@@ -11,7 +11,7 @@ public class RunProcess : MonoBehaviour
 {
     private Process process = null;
     private MovesQueue _messages;
-    [SerializeField] private CubeInputs _cubeInputs;
+    private CubeInputs _cubeInputs;
     StreamWriter messageStream;
 
 
@@ -19,6 +19,7 @@ public class RunProcess : MonoBehaviour
     {
         StartProcess();
         _messages = GetComponent<MovesQueue>();
+        _cubeInputs = FindObjectOfType<CubeInputs>().GetComponent<CubeInputs>();
     }
 
     /// <summary>
