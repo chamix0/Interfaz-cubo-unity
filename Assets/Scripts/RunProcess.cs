@@ -33,7 +33,7 @@ public class RunProcess : MonoBehaviour
             process = new Process();
             process.EnableRaisingEvents = false;
             process.StartInfo.FileName =
-                Application.dataPath + "/Executable/BluetoothCubo.exe"; //change the path to a consistent one
+                Application.dataPath + "/Executable/BluetoothCubo.exe";                                             //change the path to a consistent one
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             process.StartInfo.RedirectStandardOutput = true;
