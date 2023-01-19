@@ -24,7 +24,6 @@ public enum FACES
 public class CubeInputs : MonoBehaviour
 
 {
-    private MovesQueue _messages;
     private CubeConectionManager _conection;
     [SerializeField] private MovesQueue _moves; //must be  in a different object
     private List<char> _validationFaces; //list with the possible incomes that are meant to be moves
@@ -52,21 +51,50 @@ public class CubeInputs : MonoBehaviour
         _conection = GetComponent<CubeConectionManager>();
         topColor = centers[0, 0];
         FrontColor = centers[1, 0];
-        _messages = GetComponent<MovesQueue>();
     }
+    //
+    // // Update is called once per frame
+    // void Update()
+    // {
+    //     if (isActive && _messages.HasMessages())
+    //     {
+    //         Move move = _messages.Dequeue();
+    //         //check if connection lost
+    //         if (move.msg == "connection failed")
+    //             StartCoroutine(_conection.RestablishComunication());
+    //
+    //         //check movements
+    //         else if (move.msg != "" && ValidateMoves(move.msg))
+    //         {
+    //             //double moves
+    //             move = DoubleMove(move);
+    //             _moves.Enqueue(move);
+    //             _moves.lastMove = move;
+    //             print(move.face + " " + move.direction);
+    //         }
+    //     }
+    // }
 
-    // Update is called once per frame
-    void Update()
+    public void ProcessMessages(MovesQueue movesQueue)
     {
-        if (isActive && _messages.HasMessages())
+        if (isActive && movesQueue.HasMessages())
         {
-            Move move = _messages.Dequeue();
+            Move move = movesQueue.Dequeue();
             //check if connection lost
             if (move.msg == "connection failed")
+            {
                 StartCoroutine(_conection.RestablishComunication());
+                return;
+            }
+            //if the message is to old delete it 2 seconds of margin until there is a valid one ore there are no longer messages
+            while (move.time.TotalMilliseconds + 500 < DateTime.Now.TimeOfDay.TotalMilliseconds &&
+                   movesQueue.HasMessages())
+            {
+                move = movesQueue.Dequeue();
+            }
 
             //check movements
-            else if (move.msg != "" && ValidateMoves(move.msg))
+            if (move.msg != "" && ValidateMoves(move.msg))
             {
                 //double moves
                 move = DoubleMove(move);
@@ -231,8 +259,6 @@ public class CubeInputs : MonoBehaviour
         Move move1 = GetFace(move);
         if (_moves.lastMove == null) _moves.lastMove = move;
         Move move2 = _moves.lastMove;
-        // if (_messages.HasMessages())
-        //     move2 = GetFace(_messages.Dequeue());
 
 
         print("turn  " + (move1.time));
@@ -246,13 +272,13 @@ public class CubeInputs : MonoBehaviour
                 //take out the other face move
                 if (move1.face == FACES.L)
                     move1.direction *= -1;
-                
+
                 move1.face = FACES.M;
                 offsetCentersX(move1.direction);
             }
 
             else if ((move1.face == FACES.U && move2.face == FACES.D ||
-                      move2.face == FACES.D && move1.face == FACES.U) && move1.direction != move2.direction)
+                      move2.face == FACES.U && move1.face == FACES.D) && move1.direction != move2.direction)
             {
                 //take out the other face move
                 if (move1.face == FACES.U)
@@ -262,7 +288,7 @@ public class CubeInputs : MonoBehaviour
             }
 
             else if ((move1.face == FACES.F && move2.face == FACES.B ||
-                      move2.face == FACES.B && move1.face == FACES.F) && move1.direction != move2.direction)
+                      move2.face == FACES.F && move1.face == FACES.B) && move1.direction != move2.direction)
             {
                 if (move1.face == FACES.F)
                     move1.direction *= -1;
