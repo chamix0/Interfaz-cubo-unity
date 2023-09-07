@@ -11,6 +11,7 @@ public class RunProcess : MonoBehaviour
 {
     private Process process = null;
     private MovesQueue _messages;
+    private CubeInputs _cubeInputs;
     StreamWriter messageStream;
 
 
@@ -18,6 +19,7 @@ public class RunProcess : MonoBehaviour
     {
         StartProcess();
         _messages = GetComponent<MovesQueue>();
+        _cubeInputs = FindObjectOfType<CubeInputs>().GetComponent<CubeInputs>();
     }
 
     /// <summary>
@@ -33,7 +35,7 @@ public class RunProcess : MonoBehaviour
             process = new Process();
             process.EnableRaisingEvents = false;
             process.StartInfo.FileName =
-                Application.dataPath + "/Executable/BluetoothCubo.exe";                                             //change the path to a consistent one
+                Application.dataPath + "/Executable/BluetoothCubo.exe"; //change the path to a consistent one
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             process.StartInfo.RedirectStandardOutput = true;
@@ -65,6 +67,7 @@ public class RunProcess : MonoBehaviour
         string data = eventArgs.Data;
         print($"<color=#00FF00> Process : " + data + "</color>");
         _messages.EnqueueMsg(data);
+        _cubeInputs.ProcessMessages(_messages);
     }
 
 

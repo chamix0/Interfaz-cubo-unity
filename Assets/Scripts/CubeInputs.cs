@@ -24,14 +24,13 @@ public enum FACES
 public class CubeInputs : MonoBehaviour
 
 {
-    private MovesQueue _messages;
     private CubeConectionManager _conection;
-    [SerializeField] private MovesQueue _moves; //must be  in a different object
+    private MovesQueue _moves;
     private List<char> _validationFaces; //list with the possible incomes that are meant to be moves
     public bool isActive = false;
-    public Color topColor = Color.clear, FrontColor = Color.clear;
+    private Color topColor = Color.clear, FrontColor = Color.clear;
 
-    public Color[,] centers = new Color[3, 4]
+    private Color[,] centers = new Color[3, 4]
     {
         { Color.white, Color.clear, Color.clear, Color.clear },
         {
@@ -49,30 +48,51 @@ public class CubeInputs : MonoBehaviour
 
     void Start()
     {
-        _conection = GetComponent<CubeConectionManager>();
+        _conection = FindObjectOfType<CubeConectionManager>().GetComponent<CubeConectionManager>();
+        _moves = GetComponent<MovesQueue>();
         topColor = centers[0, 0];
         FrontColor = centers[1, 0];
-        _messages = GetComponent<MovesQueue>();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ProcessMessages(MovesQueue movesQueue)
     {
-        if (isActive && _messages.HasMessages())
+        if (isActive && movesQueue.HasMessages())
         {
-            Move move = _messages.Dequeue();
+            Move move = movesQueue.Dequeue();
             //check if connection lost
             if (move.msg == "connection failed")
-                StartCoroutine(_conection.RestablishComunication());
-
-            //check movements
-            else if (move.msg != "" && ValidateMoves(move.msg))
             {
-                //double moves
-                move = DoubleMove(move);
-                _moves.Enqueue(move);
-                _moves.lastMove = move;
-                print(move.face + " " + move.direction);
+                print("connection has failed");
+                _conection.ReEstablish();
+            }
+            else if (move.msg == "Device not found")
+            {
+                print("device not found");
+                _conection.Refresh();
+            }
+            else if (move.msg == "connection successful")
+            {
+                print("connection successful");
+                _conection.Connected();
+            }
+            else
+            {
+                //if the message is to old delete it 2 seconds of margin until there is a valid one ore there are no longer messages
+                while (move.time.TotalMilliseconds + 500 < DateTime.Now.TimeOfDay.TotalMilliseconds &&
+                       movesQueue.HasMessages())
+                {
+                    move = movesQueue.Dequeue();
+                }
+
+                //check movements
+                if (move.msg != "" && ValidateMoves(move.msg))
+                {
+                    //double moves
+                    move = DoubleMove(move);
+                    _moves.Enqueue(move);
+                    _moves.lastMove = move;
+                    print(move.face + " " + move.direction);
+                }
             }
         }
     }
@@ -231,13 +251,11 @@ public class CubeInputs : MonoBehaviour
         Move move1 = GetFace(move);
         if (_moves.lastMove == null) _moves.lastMove = move;
         Move move2 = _moves.lastMove;
-        // if (_messages.HasMessages())
-        //     move2 = GetFace(_messages.Dequeue());
 
 
         print("turn  " + (move1.time));
         print("turn difference " + Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds));
-        if (Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds) < 750)
+        if (Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds) < 500)
         {
             //could be a double move
             if ((move1.face == FACES.L && move2.face == FACES.R ||
@@ -246,13 +264,13 @@ public class CubeInputs : MonoBehaviour
                 //take out the other face move
                 if (move1.face == FACES.L)
                     move1.direction *= -1;
-                
+
                 move1.face = FACES.M;
                 offsetCentersX(move1.direction);
             }
 
             else if ((move1.face == FACES.U && move2.face == FACES.D ||
-                      move2.face == FACES.D && move1.face == FACES.U) && move1.direction != move2.direction)
+                      move2.face == FACES.U && move1.face == FACES.D) && move1.direction != move2.direction)
             {
                 //take out the other face move
                 if (move1.face == FACES.U)
@@ -262,7 +280,7 @@ public class CubeInputs : MonoBehaviour
             }
 
             else if ((move1.face == FACES.F && move2.face == FACES.B ||
-                      move2.face == FACES.B && move1.face == FACES.F) && move1.direction != move2.direction)
+                      move2.face == FACES.F && move1.face == FACES.B) && move1.direction != move2.direction)
             {
                 if (move1.face == FACES.F)
                     move1.direction *= -1;
@@ -275,7 +293,7 @@ public class CubeInputs : MonoBehaviour
         return move1;
     }
 
-    public void offsetCentersY(int direction)
+    private void offsetCentersY(int direction)
     {
         Color[] aux = new Color[4]
             { centers[1, 0], centers[1, 1], centers[1, 2], centers[1, 3] };
@@ -297,7 +315,7 @@ public class CubeInputs : MonoBehaviour
         UpdateColors();
     }
 
-    public void offsetCentersX(int direction)
+    private void offsetCentersX(int direction)
     {
         Color[] aux = new Color[4]
             { centers[0, 0], centers[1, 0], centers[2, 0], centers[1, 2] };
@@ -320,7 +338,7 @@ public class CubeInputs : MonoBehaviour
         UpdateColors();
     }
 
-    public void offsetCentersZ(int direction)
+    private void offsetCentersZ(int direction)
     {
         Color[] aux = new Color[4]
             { centers[0, 0], centers[1, 1], centers[2, 0], centers[1, 3] };
@@ -385,8 +403,23 @@ public class CubeInputs : MonoBehaviour
         return _validationFaces.Contains(chars[0]);
     }
 
-    public Move GetLastMove()
+
+    #region User methods
+
+    public Color GetFrontColor()
     {
-        return _moves.lastMove;
+        return FrontColor;
     }
+
+    public Color GetTopColor()
+    {
+        return topColor;
+    }
+
+    public void SetInputsActive(bool value)
+    {
+        isActive = value;
+    }
+
+    #endregion
 }

@@ -8,7 +8,6 @@ public class ShowMovements : MonoBehaviour
 {
     // Start is called before the first frame update
     public TMP_Text text;
-    [SerializeField] CubeInputs _cubeInputs;
     [SerializeField] private MovesQueue _movesQueue;
     private int sameMoveCounter = 1;
     private Move lastMove = null;

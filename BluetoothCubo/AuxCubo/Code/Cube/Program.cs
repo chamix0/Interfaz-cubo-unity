@@ -28,15 +28,15 @@ namespace BluetoothCubo
 
         #endregion
 
-        public static async Task Main(string[] args)
-        {
-            //init variables
-            _devicesList = new DevicesList();
-            _cubeTracker = new CubeTracker();
-
-            //start Bluetooth 
-            await BluetoothConection();
-        }
+        // public static async Task Main(string[] args)
+        // {
+        //     //init variables
+        //     _devicesList = new DevicesList();
+        //     _cubeTracker = new CubeTracker();
+        //
+        //     //start Bluetooth 
+        //     await BluetoothConection();
+        // }
 
 
         private static async Task BluetoothConection()
@@ -159,6 +159,7 @@ namespace BluetoothCubo
                 Console.WriteLine(devices[i]);
 
             device = _devicesList.GetDevice(Console.ReadLine());
+            if (device==null)Console.WriteLine("Device not found");
         }
 
         private static void DeviceWatcher_Stopped(DeviceWatcher sender, object args)

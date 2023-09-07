@@ -12,8 +12,8 @@ public class ShowCenterReference : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        _imageTop.color = _cubeInputs.centers[0, 0];
-        _imageFront.color = _cubeInputs.centers[1, 0];
+        _imageTop.color = _cubeInputs.GetTopColor();
+        _imageFront.color = _cubeInputs.GetFrontColor();
 
     }
 }
