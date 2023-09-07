@@ -48,6 +48,7 @@ public class CubeConectionManager : MonoBehaviour
         {
             connected = false;
             _refreshButton.interactable = false;
+            _dropdown.interactable = false;
         }
 
         if (refresh)
@@ -81,9 +82,8 @@ public class CubeConectionManager : MonoBehaviour
 
         int count = int.Parse(msg.msg); //the first message will always be the number of available devices to connect  
         for (int i = 0; i < count; i++)
-        {
             _dropdown.options.Add(new TMP_Dropdown.OptionData(_movesQueue.Dequeue().msg));
-        }
+
 
         _cubeInputs.gameObject.SetActive(true);
         _cubeInputs.isActive = true;

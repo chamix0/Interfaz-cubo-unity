@@ -28,15 +28,15 @@ namespace BluetoothCubo
 
         #endregion
 
-        public static async Task Main(string[] args)
-        {
-            //init variables
-            _devicesList = new DevicesList();
-            _cubeTracker = new CubeTracker();
-
-            //start Bluetooth 
-            await BluetoothConection();
-        }
+        // public static async Task Main(string[] args)
+        // {
+        //     //init variables
+        //     _devicesList = new DevicesList();
+        //     _cubeTracker = new CubeTracker();
+        //
+        //     //start Bluetooth 
+        //     await BluetoothConection();
+        // }
 
 
         private static async Task BluetoothConection()
