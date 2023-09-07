@@ -1768,7 +1768,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6419f08f64413a743ac076f95e6dec96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _conection: {fileID: 0}
+  _moves: {fileID: 0}
+  _validationFaces: []
   isActive: 0
+  topColor:
+    r: 0
+    g: 0
+    b: 0
+    a: 0
+  FrontColor:
+    r: 0
+    g: 0
+    b: 0
+    a: 0
 --- !u!1 &996471239
 GameObject:
   m_ObjectHideFlags: 0
@@ -2173,6 +2186,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   text: {fileID: 1087811274}
   _movesQueue: {fileID: 991423817}
+  sameMoveCounter: 1
 --- !u!222 &1087811276
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2238,6 +2252,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c286f711293df8488d74eeea9ebfb61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _messages: {fileID: 0}
+  _cubeInputs: {fileID: 0}
 --- !u!114 &1105767400
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2250,6 +2266,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e563e9d43a407f4b8ba957e1060883e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _movesQueue: {fileID: 0}
+  _process: {fileID: 0}
+  _cubeInputs: {fileID: 0}
+  currentDevice: 
+  reEstablish: 0
+  connected: 0
+  refresh: 0
   _dropdown: {fileID: 513479373}
   _connectButton: {fileID: 227869555}
   _cancelButton: {fileID: 335794194}

@@ -8,16 +8,16 @@ using UnityEngine;
 /// </summary>
 public enum FACES
 {
-    R,
-    L,
-    U,
-    D,
-    F,
-    B,
-    M,
-    E,
-    S,
-    NULL
+    R = 'R',
+    L = 'L',
+    U = 'U',
+    D = 'D',
+    F = 'F',
+    B = 'B',
+    M = 'M',
+    E = 'E',
+    S = 'S',
+    Null
 }
 
 [DefaultExecutionOrder(3)]
@@ -44,11 +44,12 @@ public class CubeInputs : MonoBehaviour
     private void Awake()
     {
         _validationFaces = new List<char>(new[] { 'R', 'L', 'U', 'D', 'F', 'B' });
+        DontDestroyOnLoad(this.gameObject);
     }
 
     void Start()
     {
-        _conection = FindObjectOfType<CubeConectionManager>().GetComponent<CubeConectionManager>();
+        _conection = FindObjectOfType<CubeConectionManager>();
         _moves = GetComponent<MovesQueue>();
         topColor = centers[0, 0];
         FrontColor = centers[1, 0];
@@ -61,63 +62,64 @@ public class CubeInputs : MonoBehaviour
             Move move = movesQueue.Dequeue();
             //check if connection lost
             if (move.msg == "connection failed")
-            {
-                print("connection has failed");
                 _conection.ReEstablish();
-            }
             else if (move.msg == "Device not found")
-            {
-                print("device not found");
                 _conection.Refresh();
-            }
             else if (move.msg == "connection successful")
-            {
-                print("connection successful");
                 _conection.Connected();
-            }
             else
             {
-                //if the message is to old delete it 2 seconds of margin until there is a valid one ore there are no longer messages
-                while (move.time.TotalMilliseconds + 500 < DateTime.Now.TimeOfDay.TotalMilliseconds &&
-                       movesQueue.HasMessages())
-                {
-                    move = movesQueue.Dequeue();
-                }
-
                 //check movements
                 if (move.msg != "" && ValidateMoves(move.msg))
                 {
                     //double moves
                     move = DoubleMove(move);
+                    move.color = GetColor(move.face);
                     _moves.Enqueue(move);
                     _moves.lastMove = move;
-                    print(move.face + " " + move.direction);
                 }
             }
+        }
+    }
+
+    private Color GetColor(FACES faces)
+    {
+        switch (faces)
+        {
+            case FACES.F:
+                return centers[1, 0];
+            case FACES.R:
+                return centers[1, 1];
+            case FACES.L:
+                return centers[1, 3];
+            case FACES.B:
+                return centers[1, 2];
+            case FACES.D:
+                return centers[2, 0];
+            case FACES.U:
+                return centers[0, 0];
+            default:
+                return Color.clear;
         }
     }
 
     private Move ApplyOffset(Move move)
     {
         FACES face = move.face;
-        print("top color is " + topColor + " - " + Color.white);
         if (topColor == Color.white)
         {
-            if (FrontColor == Color.green) print("green");
-            else if (FrontColor == Color.red)
+            if (FrontColor == Color.green) return move;
+            if (FrontColor == Color.red)
             {
                 move.face = FaceSwap(face, FACES.L, FACES.R, FACES.F, FACES.B, FACES.U, FACES.D);
-                print("red");
             }
             else if (FrontColor == Color.blue)
             {
                 move.face = FaceSwap(face, FACES.B, FACES.F, FACES.L, FACES.R, FACES.U, FACES.D);
-                print("blue");
             }
             else
             {
                 move.face = FaceSwap(face, FACES.R, FACES.L, FACES.B, FACES.F, FACES.U, FACES.D);
-                print("orange");
             }
         }
         else if (topColor == Color.yellow)
@@ -125,22 +127,18 @@ public class CubeInputs : MonoBehaviour
             if (FrontColor == Color.green)
             {
                 move.face = FaceSwap(face, FACES.F, FACES.B, FACES.L, FACES.R, FACES.D, FACES.U);
-                print("red");
             }
             else if (FrontColor == Color.red)
             {
                 move.face = FaceSwap(face, FACES.R, FACES.L, FACES.F, FACES.B, FACES.D, FACES.U);
-                print("red");
             }
             else if (FrontColor == Color.blue)
             {
                 move.face = FaceSwap(face, FACES.B, FACES.F, FACES.R, FACES.L, FACES.D, FACES.U);
-                print("blue");
             }
             else
             {
                 move.face = FaceSwap(face, FACES.L, FACES.R, FACES.B, FACES.F, FACES.D, FACES.U);
-                print("orange");
             }
         }
         else if (topColor == Color.green)
@@ -152,17 +150,14 @@ public class CubeInputs : MonoBehaviour
             else if (FrontColor == Color.red)
             {
                 move.face = FaceSwap(face, FACES.U, FACES.D, FACES.F, FACES.B, FACES.R, FACES.L);
-                print("red");
             }
             else if (FrontColor == Color.yellow)
             {
                 move.face = FaceSwap(face, FACES.U, FACES.D, FACES.R, FACES.L, FACES.B, FACES.F);
-                print("blue");
             }
             else
             {
                 move.face = FaceSwap(face, FACES.U, FACES.D, FACES.B, FACES.F, FACES.L, FACES.R);
-                print("orange");
             }
         }
         else if (topColor == Color.blue)
@@ -174,17 +169,14 @@ public class CubeInputs : MonoBehaviour
             else if (FrontColor == Color.red)
             {
                 move.face = FaceSwap(face, FACES.D, FACES.U, FACES.F, FACES.B, FACES.L, FACES.R);
-                print("red");
             }
             else if (FrontColor == Color.yellow)
             {
                 move.face = FaceSwap(face, FACES.D, FACES.U, FACES.L, FACES.R, FACES.B, FACES.F);
-                print("blue");
             }
             else
             {
                 move.face = FaceSwap(face, FACES.D, FACES.U, FACES.B, FACES.F, FACES.R, FACES.L);
-                print("orange");
             }
         }
         else if (topColor == Color.red)
@@ -196,17 +188,14 @@ public class CubeInputs : MonoBehaviour
             else if (FrontColor == Color.green)
             {
                 move.face = FaceSwap(face, FACES.F, FACES.B, FACES.U, FACES.D, FACES.L, FACES.R);
-                print("red");
             }
             else if (FrontColor == Color.yellow)
             {
                 move.face = FaceSwap(face, FACES.L, FACES.R, FACES.U, FACES.D, FACES.B, FACES.F);
-                print("blue");
             }
             else
             {
                 move.face = FaceSwap(face, FACES.B, FACES.F, FACES.D, FACES.U, FACES.R, FACES.L);
-                print("orange");
             }
         }
         else
@@ -218,17 +207,14 @@ public class CubeInputs : MonoBehaviour
             else if (FrontColor == Color.green)
             {
                 move.face = FaceSwap(face, FACES.F, FACES.B, FACES.D, FACES.U, FACES.R, FACES.L);
-                print("red");
             }
             else if (FrontColor == Color.yellow)
             {
                 move.face = FaceSwap(face, FACES.R, FACES.L, FACES.D, FACES.U, FACES.B, FACES.F);
-                print("blue");
             }
             else
             {
                 move.face = FaceSwap(face, FACES.B, FACES.F, FACES.D, FACES.U, FACES.L, FACES.R);
-                print("orange");
             }
         }
 
@@ -243,7 +229,7 @@ public class CubeInputs : MonoBehaviour
         if (face == FACES.L) return L;
         if (face == FACES.U) return U;
         if (face == FACES.D) return D;
-        return FACES.NULL;
+        return FACES.Null;
     }
 
     private Move DoubleMove(Move move)
@@ -252,41 +238,32 @@ public class CubeInputs : MonoBehaviour
         if (_moves.lastMove == null) _moves.lastMove = move;
         Move move2 = _moves.lastMove;
 
-
-        print("turn  " + (move1.time));
-        print("turn difference " + Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds));
         if (Math.Abs(move1.time.TotalMilliseconds - move2.time.TotalMilliseconds) < 500)
         {
             //could be a double move
-            if ((move1.face == FACES.L && move2.face == FACES.R ||
-                 move2.face == FACES.L && move1.face == FACES.R) && move1.direction != move2.direction)
+            if (move1.IsMiddleLayer(move2))
             {
-                //take out the other face move
-                if (move1.face == FACES.L)
-                    move1.direction *= -1;
-
-                move1.face = FACES.M;
-                offsetCentersX(move1.direction);
-            }
-
-            else if ((move1.face == FACES.U && move2.face == FACES.D ||
-                      move2.face == FACES.U && move1.face == FACES.D) && move1.direction != move2.direction)
-            {
-                //take out the other face move
-                if (move1.face == FACES.U)
-                    move1.direction *= -1;
-                move1.face = FACES.E;
-                offsetCentersY(move1.direction);
-            }
-
-            else if ((move1.face == FACES.F && move2.face == FACES.B ||
-                      move2.face == FACES.F && move1.face == FACES.B) && move1.direction != move2.direction)
-            {
-                if (move1.face == FACES.F)
-                    move1.direction *= -1;
-
-                move1.face = FACES.S;
-                offsetCentersZ(move1.direction);
+                switch (move1.face)
+                {
+                    case FACES.L or FACES.R:
+                        if (move1.face is FACES.L)
+                            move1.direction *= -1;
+                        move1.face = FACES.M;
+                        offsetCentersX(move1.direction);
+                        break;
+                    case FACES.U or FACES.D:
+                        if (move1.face is FACES.U)
+                            move1.direction *= -1;
+                        move1.face = FACES.E;
+                        offsetCentersY(move1.direction);
+                        break;
+                    case FACES.F or FACES.B:
+                        if (move1.face is FACES.B)
+                            move1.direction *= -1;
+                        move1.face = FACES.S;
+                        offsetCentersZ(move1.direction);
+                        break;
+                }
             }
         }
 

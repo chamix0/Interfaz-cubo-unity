@@ -19,7 +19,7 @@ public class RunProcess : MonoBehaviour
     {
         StartProcess();
         _messages = GetComponent<MovesQueue>();
-        _cubeInputs = FindObjectOfType<CubeInputs>().GetComponent<CubeInputs>();
+        _cubeInputs = FindObjectOfType<CubeInputs>();
     }
 
     /// <summary>
@@ -34,15 +34,18 @@ public class RunProcess : MonoBehaviour
         {
             process = new Process();
             process.EnableRaisingEvents = false;
+            process.StartInfo.WorkingDirectory = Application.dataPath;
+            // process.StartInfo.FileName =
+            //     Application.dataPath + "/CubeBluetooth/Executable/BluetoothCubo.exe";
             process.StartInfo.FileName =
-                Application.dataPath + "/Executable/BluetoothCubo.exe"; //change the path to a consistent one
+                Application.dataPath+"/executable/BluetoothCubo.exe"; //change the path to a consistent one
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardInput = true;
             process.StartInfo.RedirectStandardError = true;
-            process.OutputDataReceived += new DataReceivedEventHandler(DataReceived);
-            process.ErrorDataReceived += new DataReceivedEventHandler(ErrorReceived);
+            process.OutputDataReceived += DataReceived;
+            process.ErrorDataReceived += ErrorReceived;
             process.Start();
             process.BeginOutputReadLine();
             messageStream = process.StandardInput;
@@ -65,7 +68,7 @@ public class RunProcess : MonoBehaviour
     void DataReceived(object sender, DataReceivedEventArgs eventArgs)
     {
         string data = eventArgs.Data;
-        print($"<color=#00FF00> Process : " + data + "</color>");
+        UnityEngine.Debug.Log($"<color=#00FF00> Process : " + data + "</color>");
         _messages.EnqueueMsg(data);
         _cubeInputs.ProcessMessages(_messages);
     }
@@ -89,6 +92,11 @@ public class RunProcess : MonoBehaviour
     /// If the aplication quits, it will kill the process first
     /// </summary>
     void OnApplicationQuit()
+    {
+        EndProcess();
+    }
+
+    public void EndProcess()
     {
         if (process != null && !process.HasExited)
         {
